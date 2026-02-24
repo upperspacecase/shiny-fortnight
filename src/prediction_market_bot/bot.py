@@ -17,6 +17,10 @@ from prediction_market_bot.engine.arbitrage import (
 )
 from prediction_market_bot.engine.executor import TradeExecutor
 from prediction_market_bot.models.market import ArbitrageOpportunity, Market, Portfolio
+from prediction_market_bot.sample_data import (
+    get_sample_kalshi_markets,
+    get_sample_polymarket_markets,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,25 +44,32 @@ class PredictionMarketBot:
         """Run a single scan cycle across all enabled platforms."""
         logger.info("Starting market scan at %s", datetime.utcnow().isoformat())
 
-        # Fetch markets from all enabled platforms concurrently
+        # Fetch markets from all enabled platforms
         poly_markets: list[Market] = []
         kalshi_markets: list[Market] = []
 
-        tasks = []
-        if self.config.enable_polymarket:
-            tasks.append(("polymarket", self._fetch_polymarket()))
-        if self.config.enable_kalshi:
-            tasks.append(("kalshi", self._fetch_kalshi()))
+        if self.config.demo:
+            logger.info("Using sample market data (demo mode)")
+            if self.config.enable_polymarket:
+                poly_markets = get_sample_polymarket_markets()
+            if self.config.enable_kalshi:
+                kalshi_markets = get_sample_kalshi_markets()
+        else:
+            tasks = []
+            if self.config.enable_polymarket:
+                tasks.append(("polymarket", self._fetch_polymarket()))
+            if self.config.enable_kalshi:
+                tasks.append(("kalshi", self._fetch_kalshi()))
 
-        for name, coro in tasks:
-            try:
-                result = await coro
-                if name == "polymarket":
-                    poly_markets = result
-                else:
-                    kalshi_markets = result
-            except Exception:
-                logger.exception("Failed to fetch from %s", name)
+            for name, coro in tasks:
+                try:
+                    result = await coro
+                    if name == "polymarket":
+                        poly_markets = result
+                    else:
+                        kalshi_markets = result
+                except Exception:
+                    logger.exception("Failed to fetch from %s", name)
 
         all_markets = poly_markets + kalshi_markets
         logger.info(

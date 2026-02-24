@@ -27,6 +27,7 @@ def main() -> None:
 @click.option("--limit", default=100, help="Markets to fetch per platform")
 @click.option("--no-polymarket", is_flag=True, help="Disable Polymarket")
 @click.option("--no-kalshi", is_flag=True, help="Disable Kalshi")
+@click.option("--demo", is_flag=True, help="Use sample data (no API calls)")
 @click.option("--log-level", default="INFO", help="Log level")
 @click.option("--log-file", default=None, help="Log to file")
 def scan(
@@ -35,6 +36,7 @@ def scan(
     limit: int,
     no_polymarket: bool,
     no_kalshi: bool,
+    demo: bool,
     log_level: str,
     log_file: str | None,
 ) -> None:
@@ -45,6 +47,7 @@ def scan(
         markets_per_platform=limit,
         enable_polymarket=not no_polymarket,
         enable_kalshi=not no_kalshi,
+        demo=demo,
         log_level=log_level,
         log_file=log_file,
         dry_run=True,
@@ -62,6 +65,7 @@ def scan(
 @click.option("--min-profit", default=0.5, help="Minimum profit %% to flag")
 @click.option("--limit", default=100, help="Markets to fetch per platform")
 @click.option("--live", is_flag=True, help="Enable live trading (requires API keys)")
+@click.option("--demo", is_flag=True, help="Use sample data (no API calls)")
 @click.option("--log-level", default="INFO", help="Log level")
 def run(
     cash: float,
@@ -69,6 +73,7 @@ def run(
     min_profit: float,
     limit: int,
     live: bool,
+    demo: bool,
     log_level: str,
 ) -> None:
     """Run the bot in continuous scanning mode."""
@@ -78,6 +83,7 @@ def run(
         min_profit_pct=min_profit,
         markets_per_platform=limit,
         dry_run=not live,
+        demo=demo,
         log_level=log_level,
     )
     config.setup_logging()
@@ -116,11 +122,13 @@ def run(
 @main.command()
 @click.option("--limit", default=50, help="Markets to fetch per platform")
 @click.option("--top", default=20, help="Top N markets to display")
-def analyze(limit: int, top: int) -> None:
+@click.option("--demo", is_flag=True, help="Use sample data (no API calls)")
+def analyze(limit: int, top: int, demo: bool) -> None:
     """Analyze markets for mispricing signals (no trading)."""
     config = BotConfig(
         markets_per_platform=limit,
         dry_run=True,
+        demo=demo,
         log_level="WARNING",
     )
     config.setup_logging()

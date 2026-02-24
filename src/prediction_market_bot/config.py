@@ -28,6 +28,9 @@ class BotConfig:
     enable_polymarket: bool = True
     enable_kalshi: bool = True
 
+    # Demo mode — use sample data instead of live API calls
+    demo: bool = False
+
     # Logging
     log_level: str = "INFO"
     log_file: str | None = None
